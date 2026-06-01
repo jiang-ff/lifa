@@ -1,0 +1,95 @@
+<view class="container safe-bottom">
+  <block wx:if="{{loading}}">
+    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中…</view>
+  </block>
+
+  <block wx:else>
+    <view class="card hero">
+      <view class="row" style="align-items: flex-start;">
+        <view class="row" style="justify-content: flex-start; align-items: flex-start;">
+          <view class="avatar hero-avatar">{{avatarText}}</view>
+          <view style="margin-left: 16rpx;">
+            <view style="font-size: 40rpx; font-weight: 900;">{{member.name || "未命名"}}</view>
+            <view class="muted" style="margin-top: 8rpx;">{{member.phone || "-"}}</view>
+            <view style="height: 10rpx;"></view>
+            <view class="row" style="justify-content: flex-start;">
+              <view class="chip chip-outline" style="margin-right: 10rpx;">{{member.gender || "未知"}}</view>
+              <view class="chip chip-outline">{{member.birthday || "未设置生日"}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view style="text-align:right;">
+          <view class="subtitle">余额</view>
+          <view style="font-size: 46rpx; font-weight: 900;">¥ {{member.balance || 0}}</view>
+          <view style="height: 12rpx;"></view>
+          <view class="chip {{member.balance > 0 ? 'chip-green' : 'chip-gray'}}">{{member.balance > 0 ? '可消费' : '待充值'}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{member.note}}" class="muted" style="margin-top: 16rpx;">备注：{{member.note}}</view>
+
+      <view style="height: 18rpx;"></view>
+      <view class="row gap-12" style="flex-wrap: wrap; justify-content: flex-start;">
+        <view class="chip chip-outline" bindtap="onRecharge">充值</view>
+        <view class="chip chip-outline" bindtap="onConsume">消费</view>
+        <view class="chip chip-outline" bindtap="onAdjust">调整</view>
+        <view class="chip chip-outline" bindtap="copyPhone">复制手机号</view>
+        <view class="chip chip-outline" bindtap="callPhone">拨打</view>
+        <view class="chip chip-outline" bindtap="goEdit">编辑资料</view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view class="card">
+      <view class="row">
+        <view style="font-weight: 900;">近 30 笔统计</view>
+        <view class="muted" style="font-size: 24rpx;">用于对账，不用于吹牛</view>
+      </view>
+      <view style="height: 14rpx;"></view>
+      <view class="row">
+        <view>
+          <view class="muted" style="font-size: 24rpx;">充值</view>
+          <view style="font-size: 34rpx; font-weight: 900; color: #059669;">+{{stats.totalRecharge}}</view>
+        </view>
+        <view>
+          <view class="muted" style="font-size: 24rpx;">消费</view>
+          <view style="font-size: 34rpx; font-weight: 900; color: #dc2626;">-{{stats.totalConsume}}</view>
+        </view>
+        <view style="text-align:right;">
+          <view class="muted" style="font-size: 24rpx;">净额</view>
+          <view style="font-size: 34rpx; font-weight: 900;">{{stats.net}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view class="card">
+      <view class="row">
+        <view style="font-weight: 900;">流水</view>
+        <view class="muted" style="font-size: 24rpx;">下拉刷新</view>
+      </view>
+      <view style="height: 16rpx;"></view>
+
+      <block wx:if="{{transactions.length === 0}}">
+        <view class="muted" style="text-align:center; padding: 16rpx 0;">暂无流水</view>
+      </block>
+
+      <block wx:else>
+        <view wx:for="{{transactions}}" wx:key="_id" class="tx">
+          <view class="row">
+            <view class="chip {{item.typeChipClass}}">{{item.typeText}}</view>
+            <view class="{{item.amountClass}}" style="font-weight: 900;">{{item.amountText}}</view>
+          </view>
+          <view class="row muted" style="margin-top: 8rpx; font-size: 24rpx;">
+            <view>{{item.timeText}}</view>
+            <view>余额：{{item.afterBalance}}</view>
+          </view>
+          <view wx:if="{{item.remark}}" class="muted" style="margin-top: 8rpx; font-size: 24rpx;">{{item.remark}}</view>
+        </view>
+      </block>
+    </view>
+  </block>
+</view>

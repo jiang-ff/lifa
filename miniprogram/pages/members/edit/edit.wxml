@@ -1,0 +1,66 @@
+<view class="container safe-bottom">
+  <view class="card">
+    <view class="field">
+      <view class="label">姓名</view>
+      <input class="input" value="{{form.name}}" placeholder="比如：张三" bindinput="onInput" data-field="name" />
+    </view>
+
+    <view class="field">
+      <view class="label">手机号</view>
+      <input class="input" value="{{form.phone}}" placeholder="用于联系/搜索（建议填）" type="number" bindinput="onInput" data-field="phone" />
+    </view>
+
+    <view class="field">
+      <view class="label">性别</view>
+      <picker mode="selector" range="{{genderOptions}}" value="{{genderIndex}}" bindchange="onGenderChange">
+        <view class="picker">{{genderOptions[genderIndex]}}</view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="label">生日</view>
+      <picker mode="date" value="{{form.birthday}}" bindchange="onBirthdayChange">
+        <view class="picker">{{form.birthday || "未设置"}}</view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="label">备注</view>
+      <textarea class="input" value="{{form.note}}" placeholder="比如：剪发偏好/禁忌…" auto-height bindinput="onInput" data-field="note" />
+    </view>
+  </view>
+
+  <view style="height: 16rpx;"></view>
+
+  <view class="card">
+    <block wx:if="{{isEdit}}">
+      <view class="row">
+        <view>
+          <view style="font-weight: 800;">当前余额</view>
+          <view class="muted" style="margin-top: 6rpx; font-size: 24rpx;">余额不建议在编辑页改，避免账对不上。</view>
+        </view>
+        <view style="text-align:right;">
+          <view style="font-size: 40rpx; font-weight: 900;">¥ {{currentBalance}}</view>
+          <view style="height: 10rpx;"></view>
+          <view class="chip chip-outline" bindtap="goDetail">去详情调整</view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="field">
+        <view class="label">初始余额</view>
+        <input class="input" value="{{form.balance}}" placeholder="0" type="digit" bindinput="onInput" data-field="balance" />
+      </view>
+      <view class="muted" style="font-size: 24rpx;">后续充值/消费请在详情页操作，账更清楚。</view>
+    </block>
+  </view>
+
+  <view style="height: 24rpx;"></view>
+
+  <button class="btn" loading="{{saving}}" bindtap="onSave">{{isEdit ? "保存修改" : "创建会员"}}</button>
+
+  <view style="height: 16rpx;"></view>
+
+  <button wx:if="{{isEdit}}" class="btn-danger" bindtap="onDelete">删除会员</button>
+</view>

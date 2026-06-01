@@ -1,0 +1,29 @@
+.hero {
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.06),
+    rgba(37, 99, 235, 0.1)
+  );
+}
+
+.hero-avatar {
+  background: linear-gradient(135deg, #111827, #2563eb);
+}
+
+.amount-plus {
+  color: #059669;
+}
+
+.amount-minus {
+  color: #dc2626;
+}
+
+.tx {
+  padding: 16rpx 0;
+  border-top: 1rpx solid #eef0f4;
+}
+
+.tx:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
