@@ -1,0 +1,33 @@
+<view class="tab-bar">
+  <view
+    wx:for="{{list}}"
+    wx:key="path"
+    class="tab-item {{selected === item.path ? 'tab-active' : ''}}"
+    bindtap="switchTab"
+    data-path="{{item.path}}"
+    data-index="{{index}}"
+  >
+    <view class="tab-icon">
+      <view wx:if="{{item.path === '/pages/members/list/list'}}" class="icon-svg">
+        <view class="i-people {{selected === item.path ? 'active' : ''}}">
+          <view class="i-head"></view>
+          <view class="i-body"></view>
+        </view>
+      </view>
+      <view wx:elif="{{item.path === '/pages/reports/dashboard/dashboard'}}" class="icon-svg">
+        <view class="i-chart {{selected === item.path ? 'active' : ''}}">
+          <view class="i-bar i-bar1"></view>
+          <view class="i-bar i-bar2"></view>
+          <view class="i-bar i-bar3"></view>
+        </view>
+      </view>
+      <view wx:elif="{{item.path === '/pages/shop/team/team'}}" class="icon-svg">
+        <view class="i-team {{selected === item.path ? 'active' : ''}}">
+          <view class="i-t1"></view>
+          <view class="i-t2"></view>
+        </view>
+      </view>
+    </view>
+    <view class="tab-text">{{item.text}}</view>
+  </view>
+</view>

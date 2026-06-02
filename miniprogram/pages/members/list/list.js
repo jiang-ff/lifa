@@ -19,13 +19,20 @@ function toNumber(value) {
 }
 
 function normalizeMembers(list) {
+  const now = Date.now()
+  const THIRTY_DAYS = 30 * 86400000
   return (list || []).map((member) => {
     const balance = typeof member.balance === "number" ? member.balance : 0
+    const lastVisitAt = member.lastVisitAt || 0
+    const daysSinceVisit = lastVisitAt ? Math.floor((now - lastVisitAt) / 86400000) : null
+    const needRemind = lastVisitAt && (now - lastVisitAt) > THIRTY_DAYS
     return {
       ...member,
       balance,
       avatarText: avatarText(member.name),
-      updatedText: formatTime(member.updatedAt || member.createdAt)
+      updatedText: formatTime(member.updatedAt || member.createdAt),
+      daysSinceVisit,
+      needRemind
     }
   })
 }
@@ -47,6 +54,9 @@ Page({
   },
 
   async onShow() {
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      this.getTabBar().setData({ selected: "/pages/members/list/list" })
+    }
     await this.initializePage()
   },
 

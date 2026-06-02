@@ -1,0 +1,136 @@
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(20rpx);
+  -webkit-backdrop-filter: saturate(180%) blur(20rpx);
+  border-top: 1rpx solid rgba(226, 232, 240, 0.6);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 999;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0 10rpx;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-text {
+  font-size: 20rpx;
+  color: #94a3b8;
+  margin-top: 6rpx;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.tab-active .tab-text {
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.tab-icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.i-people {
+  position: relative;
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.i-head {
+  width: 13rpx;
+  height: 13rpx;
+  border-radius: 50%;
+  background: #cbd5e1;
+  margin: 0 auto;
+  transition: background 0.2s ease;
+}
+
+.i-body {
+  width: 24rpx;
+  height: 13rpx;
+  border-radius: 13rpx 13rpx 0 0;
+  background: #cbd5e1;
+  margin: 3rpx auto 0;
+  transition: background 0.2s ease;
+}
+
+.tab-active .i-head,
+.tab-active .i-body {
+  background: #4f46e5;
+}
+
+.i-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4rpx;
+  height: 28rpx;
+}
+
+.i-bar {
+  width: 6rpx;
+  border-radius: 3rpx;
+  background: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.i-bar1 {
+  height: 14rpx;
+}
+.i-bar2 {
+  height: 22rpx;
+}
+.i-bar3 {
+  height: 28rpx;
+}
+
+.tab-active .i-bar {
+  background: #4f46e5;
+}
+
+.i-team {
+  display: flex;
+  gap: 4rpx;
+  align-items: center;
+}
+
+.i-t1,
+.i-t2 {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.i-t1 {
+  margin-top: -9rpx;
+}
+.i-t2 {
+  margin-bottom: -9rpx;
+}
+
+.tab-active .i-t1,
+.tab-active .i-t2 {
+  background: #4f46e5;
+}

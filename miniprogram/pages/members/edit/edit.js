@@ -26,6 +26,9 @@ Page({
 
   async onLoad(options) {
     const id = options?.id || ""
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      this.getTabBar().hide()
+    }
     try {
       const shop = await app.ensureShopContext()
       this.setData({ shopName: shop.shopName || "" })

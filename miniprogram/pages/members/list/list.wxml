@@ -1,4 +1,4 @@
-<view class="container safe-bottom">
+<view class="container page-tab">
   <view class="card shop-card">
     <view class="row" style="align-items: flex-start;">
       <view style="flex: 1; padding-right: 20rpx;">
@@ -102,6 +102,9 @@
       </view>
 
       <view style="height: 16rpx;"></view>
+      <view wx:if="{{item.needRemind}}" style="margin-bottom: 10rpx;">
+        <view class="chip chip-red" style="font-size: 22rpx;">⚠ 已 {{item.daysSinceVisit}} 天未到店</view>
+      </view>
       <view class="row gap-12">
         <view class="chip chip-outline" bindtap="quickRecharge" data-id="{{item._id}}">充值</view>
         <view class="chip chip-outline" bindtap="quickConsume" data-id="{{item._id}}">消费</view>

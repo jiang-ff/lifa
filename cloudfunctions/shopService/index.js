@@ -6,14 +6,12 @@ const db = cloud.database()
 const _ = db.command
 
 const ROLE_TEXT = {
-  owner: "店主",
   manager: "店长",
   staff: "员工"
 }
 
 const ROLE_PERMISSIONS = {
-  owner: ["shop.update", "staff.manage", "member.write", "member.delete", "balance.write", "report.view"],
-  manager: ["shop.update", "staff.manage", "member.write", "balance.write", "report.view"],
+  manager: ["shop.update", "staff.manage", "member.write", "member.delete", "balance.write", "report.view"],
   staff: ["member.write", "balance.write"]
 }
 
@@ -26,7 +24,8 @@ function isValidPhone(phone) {
 }
 
 function normalizeRole(role) {
-  return ["owner", "manager", "staff"].includes(role) ? role : "staff"
+  if (role === "owner") return "manager"
+  return ["manager", "staff"].includes(role) ? role : "staff"
 }
 
 function can(role, permission) {
@@ -72,12 +71,12 @@ async function createShopRecord(openId) {
 
 function buildContext(openId, membership, shop, createdNow) {
   const now = Date.now()
-  const role = normalizeRole(membership.role || "owner")
+  const role = normalizeRole(membership.role || "manager")
   const permissions = ROLE_PERMISSIONS[role] || []
   return {
     openId,
     role,
-    roleText: ROLE_TEXT[role] || "员工",
+    roleText: ROLE_TEXT[role] || "店长",
     permissions,
     canManageStaff: can(role, "staff.manage"),
     canViewReport: can(role, "report.view"),
@@ -106,7 +105,7 @@ async function ensureShopContext(openId) {
     membership = {
       shopId: shop._id,
       userOpenId: openId,
-      role: "owner",
+      role: "manager",
       displayName: "",
       status: "active",
       createdAt: now,
@@ -120,7 +119,7 @@ async function ensureShopContext(openId) {
     await db.collection("shop_users").doc(membership._id).update({
       data: {
         shopId: shop._id,
-        role: membership.role || "owner",
+        role: membership.role || "manager",
         status: "active",
         updatedAt: now
       }
@@ -204,12 +203,11 @@ async function updateStaffRole(openId, event) {
   const staffId = trimString(event?.staffId)
   const role = normalizeRole(event?.role)
   if (!staffId) return { ok: false, message: "staff_id_required" }
-  if (role === "owner") return { ok: false, message: "owner_role_locked" }
 
   const snap = await db.collection("shop_users").doc(staffId).get().catch(() => null)
   const staff = snap?.data
   if (!staff || staff.shopId !== context.shopId) return { ok: false, message: "not_found" }
-  if (staff.role === "owner") return { ok: false, message: "owner_role_locked" }
+  if (staff.userOpenId === openId) return { ok: false, message: "cannot_change_self" }
 
   await db.collection("shop_users").doc(staffId).update({
     data: { role, updatedAt: Date.now() }
@@ -227,7 +225,7 @@ async function removeStaff(openId, event) {
   const snap = await db.collection("shop_users").doc(staffId).get().catch(() => null)
   const staff = snap?.data
   if (!staff || staff.shopId !== context.shopId) return { ok: false, message: "not_found" }
-  if (staff.role === "owner" || staff.userOpenId === openId) return { ok: false, message: "cannot_remove" }
+  if (staff.userOpenId === openId) return { ok: false, message: "cannot_remove_self" }
 
   await db.collection("shop_users").doc(staffId).update({
     data: { status: "removed", updatedAt: Date.now() }
@@ -262,10 +260,6 @@ async function joinByInviteCode(openId, event) {
       data: { displayName, status: "active", updatedAt: now }
     })
     return { ok: true, data: buildContext(openId, { ...membership, displayName }, shop, false) }
-  }
-
-  if (membership && membership.role === "owner") {
-    return { ok: false, message: "owner_cannot_join" }
   }
 
   if (membership) {

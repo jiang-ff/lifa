@@ -5,6 +5,18 @@ function formatTime(ts) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+function formatDate(ts) {
+  if (!ts) return "暂无记录"
+  const d = new Date(ts)
+  const pad = (n) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function daysAgo(ts) {
+  if (!ts) return 999
+  return Math.floor((Date.now() - ts) / 86400000)
+}
+
 function toNumber(value) {
   const n = Number(value)
   return Number.isFinite(n) ? n : 0
@@ -16,14 +28,20 @@ function avatarText(name) {
   return n.slice(0, 1)
 }
 
+const REPURCHASE_THRESHOLD = 30
+
 Page({
   data: {
     id: "",
     loading: true,
     actionLoading: false,
+    visitLoading: false,
     member: {},
     transactions: [],
     avatarText: "?",
+    visitCount: 0,
+    lastVisitText: "暂无记录",
+    repurchaseAlert: "",
     stats: {
       totalRecharge: 0,
       totalConsume: 0,
@@ -37,6 +55,9 @@ Page({
       wx.showToast({ title: "缺少会员ID", icon: "none" })
       wx.navigateBack()
       return
+    }
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      this.getTabBar().hide()
     }
     this.setData({ id })
     await this.refreshAll()
@@ -77,6 +98,13 @@ Page({
         }
       })
 
+      const visitCount = toNumber(result.data?.visitCount)
+      const lastVisitAt = result.data?.lastVisitAt || 0
+      const lastVisitText = lastVisitAt ? formatDate(lastVisitAt) : "暂无记录"
+      const sinceLastVisit = daysAgo(lastVisitAt)
+      const repurchaseAlert =
+        lastVisitAt && sinceLastVisit >= REPURCHASE_THRESHOLD ? sinceLastVisit : ""
+
       this.setData({
         member: {
           ...member,
@@ -84,6 +112,9 @@ Page({
         },
         avatarText: avatarText(member.name),
         transactions,
+        visitCount,
+        lastVisitText,
+        repurchaseAlert,
         stats: {
           totalRecharge: toNumber(result.data?.stats?.totalRecharge),
           totalConsume: toNumber(result.data?.stats?.totalConsume),
@@ -117,6 +148,31 @@ Page({
       return
     }
     wx.setClipboardData({ data: phone })
+  },
+
+  async onVisitRecord() {
+    if (this.data.visitLoading) return
+    this.setData({ visitLoading: true })
+    try {
+      const res = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "recordVisit",
+          memberId: this.data.id
+        }
+      })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "visit_failed")
+      }
+
+      wx.showToast({ title: "已登记到店", icon: "success" })
+      await this.refreshAll()
+    } catch (err) {
+      wx.showToast({ title: "登记失败", icon: "none" })
+    } finally {
+      this.setData({ visitLoading: false })
+    }
   },
 
   async onRecharge() {

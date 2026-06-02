@@ -1,2 +1,94 @@
-<!--pages/reports/dashboard/dashboard.wxml-->
-<text>pages/reports/dashboard/dashboard.wxml</text>
+<view class="container page-tab">
+  <view class="card">
+    <view class="seg">
+      <view class="seg-item {{period === 'today' ? 'seg-item-active' : ''}}" bindtap="setPeriod" data-period="today">今天</view>
+      <view class="seg-item {{period === 'week' ? 'seg-item-active' : ''}}" bindtap="setPeriod" data-period="week">本周</view>
+      <view class="seg-item {{period === 'month' ? 'seg-item-active' : ''}}" bindtap="setPeriod" data-period="month">本月</view>
+      <view class="seg-item {{period === 'lastMonth' ? 'seg-item-active' : ''}}" bindtap="setPeriod" data-period="lastMonth">上月</view>
+    </view>
+
+    <view style="height: 20rpx;"></view>
+    <view class="row">
+      <view class="muted" style="font-size: 24rpx;">统计区间</view>
+      <view style="font-weight: 800;">{{dateLabel}}</view>
+    </view>
+  </view>
+
+  <view style="height: 16rpx;"></view>
+
+  <block wx:if="{{loading}}">
+    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中...</view>
+  </block>
+
+  <block wx:else>
+    <view class="card">
+      <view style="font-weight: 900; margin-bottom: 16rpx;">核心指标</view>
+      <view class="grid-2">
+        <view class="stat-card stat-green">
+          <view class="stat-label">收入</view>
+          <view class="stat-value">¥ {{summary.totalRecharge}}</view>
+        </view>
+        <view class="stat-card stat-red">
+          <view class="stat-label">消费</view>
+          <view class="stat-value">¥ {{summary.totalConsume}}</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-label">净收入</view>
+          <view class="stat-value">{{summary.totalNet >= 0 ? '+' : ''}}¥ {{summary.totalNet}}</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-label">到店次数</view>
+          <view class="stat-value">{{summary.totalVisits}}</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-label">新增会员</view>
+          <view class="stat-value">{{summary.newMembers}}</view>
+        </view>
+        <view class="stat-card">
+          <view class="stat-label">会员总数</view>
+          <view class="stat-value">{{summary.totalMembers}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view wx:if="{{daily.length > 0}}" class="card">
+      <view style="font-weight: 900; margin-bottom: 16rpx;">每日明细</view>
+      <view class="row daily-header">
+        <view style="flex: 1.2;">日期</view>
+        <view style="flex: 1; text-align: right;">充值</view>
+        <view style="flex: 1; text-align: right;">消费</view>
+        <view style="flex: 0.8; text-align: right;">到店</view>
+      </view>
+      <block wx:for="{{daily}}" wx:key="date">
+        <view class="row daily-row">
+          <view style="flex: 1.2; font-size: 24rpx;">{{item.date.slice(5)}}</view>
+          <view style="flex: 1; text-align: right; color: #059669;">¥ {{item.recharge}}</view>
+          <view style="flex: 1; text-align: right; color: #dc2626;">¥ {{item.consume}}</view>
+          <view style="flex: 0.8; text-align: right;">{{item.visits}}</view>
+        </view>
+      </block>
+    </view>
+
+    <view wx:else class="card">
+      <view class="muted" style="text-align:center; padding: 20rpx 0;">该时间段暂无数据</view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view wx:if="{{topMembers.length > 0}}" class="card">
+      <view style="font-weight: 900; margin-bottom: 12rpx;">消费排行 Top 10</view>
+      <block wx:for="{{topMembers}}" wx:key="memberId">
+        <view class="row daily-row">
+          <view>
+            <view style="font-size: 28rpx; font-weight: 700;">{{item.name}}</view>
+          </view>
+          <view style="color: #dc2626; font-weight: 800;">¥ {{item.totalConsume}}</view>
+        </view>
+      </block>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+  </block>
+</view>

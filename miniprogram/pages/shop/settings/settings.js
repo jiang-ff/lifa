@@ -14,6 +14,9 @@ Page({
   },
 
   async onShow() {
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      this.getTabBar().hide()
+    }
     await this.loadShop()
   },
 

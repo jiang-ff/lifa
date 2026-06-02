@@ -1,2 +1,90 @@
-<!--pages/shop/team/team.wxml-->
-<text>pages/shop/team/team.wxml</text>
+<view class="container page-tab">
+  <block wx:if="{{loading}}">
+    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中...</view>
+  </block>
+
+  <block wx:else>
+    <view class="card">
+      <view class="row">
+        <view>
+          <view style="font-weight: 900;">店铺邀请码</view>
+          <view class="muted" style="margin-top: 8rpx; font-size: 24rpx;">
+            店员输入此邀请码即可加入当前店铺，新加入默认为"员工"角色
+          </view>
+        </view>
+        <view class="chip chip-outline" bindtap="copyInviteCode">复制</view>
+      </view>
+      <view style="height: 12rpx;"></view>
+      <view class="row">
+        <view style="font-size: 48rpx; font-weight: 900; letter-spacing: 8rpx;">{{inviteCode}}</view>
+        <view class="chip" bindtap="refreshCode" style="font-size: 22rpx;">刷新</view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view class="card">
+      <view style="font-weight: 900;">自身角色</view>
+      <view style="margin-top: 8rpx;">
+        <view class="chip {{roleClass}}">{{currentUser.roleText}}</view>
+        <view class="muted" style="margin-top: 8rpx; font-size: 24rpx;">
+          {{currentUser.role === 'manager' ? '您是店长，拥有最高权限，可管理员工、编辑店铺、增删会员、查看报表。' : '您是员工，可以登记会员、记录充值消费。'}}
+        </view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <block wx:if="{{canManageStaff}}">
+      <view class="card">
+        <view class="row">
+          <view style="font-weight: 900;">团队成员</view>
+          <view class="muted" style="font-size: 24rpx;">共 {{staff.length}} 人</view>
+        </view>
+
+        <view wx:if="{{staff.length === 0}}" class="muted" style="text-align:center; padding: 20rpx 0;">
+          暂无其他成员，复制邀请码让店员加入
+        </view>
+
+        <block wx:for="{{staff}}" wx:key="_id">
+          <view class="team-row">
+            <view class="row">
+              <view>
+                <view style="font-size: 30rpx; font-weight: 800;">
+                  {{item.displayName}}
+                  <text wx:if="{{item.isCurrentUser}}" class="muted" style="font-size: 22rpx;">（你）</text>
+                </view>
+                <view style="margin-top: 6rpx;" class="row" style="justify-content: flex-start;">
+                  <view class="chip {{item.role === 'manager' ? 'chip-green' : 'chip-gray'}}" style="margin-right: 10rpx;">
+                    {{item.roleText}}
+                  </view>
+                  <view class="muted" style="font-size: 22rpx;">{{item.joinedText}}</view>
+                </view>
+              </view>
+
+              <block wx:if="{{!item.isCurrentUser}}">
+                <view class="row gap-12">
+                  <picker mode="selector" range="{{roleOptions}}" value="{{item.role === 'manager' ? 0 : 1}}" bindchange="onRoleChange" data-id="{{item._id}}">
+                    <view class="chip chip-outline">改角色</view>
+                  </picker>
+                  <view class="chip chip-outline" style="color: #ef4444; border-color: #ef4444;" bindtap="removeStaff" data-id="{{item._id}}" data-name="{{item.displayName}}">移除</view>
+                </view>
+              </block>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <view style="height: 16rpx;"></view>
+    </block>
+
+    <view class="card-soft">
+      <view style="font-weight: 900;">角色说明</view>
+      <view style="margin-top: 8rpx; font-size: 24rpx; color: #374151;">
+        <view>· <text style="color: #059669; font-weight: 700;">店长</text>：店铺创建者即为店长，拥有最高权限。可以设置店铺信息、管理团队成员、增删会员、调整余额、查看经营报表。</view>
+        <view style="margin-top: 6rpx;">· <text style="color: #6b7280; font-weight: 700;">员工</text>：可以登记会员、记录充值消费。店长可将员工晋升为店长。</view>
+        <view style="margin-top: 10rpx; color: #9ca3af;">如何成为店长：第一个打开小程序创建店铺的人自动成为店长；也可由现有店长在成员列表中将员工晋升为店长。</view>
+      </view>
+    </view>
+  </block>
+</view>

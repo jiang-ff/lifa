@@ -1,1 +1,52 @@
-/* pages/reports/dashboard/dashboard.wxss */
+.grid-2 {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -8rpx;
+}
+
+.stat-card {
+  width: calc(50% - 16rpx);
+  margin: 8rpx;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  padding: 20rpx 18rpx;
+  box-sizing: border-box;
+  border: 1rpx solid rgba(226, 232, 240, 0.5);
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--color-text-muted);
+  margin-bottom: 8rpx;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.stat-green .stat-value {
+  color: var(--color-success);
+}
+.stat-red .stat-value {
+  color: var(--color-danger);
+}
+
+.daily-header {
+  padding-bottom: 12rpx;
+  border-bottom: 2rpx solid var(--color-border);
+  font-size: 22rpx;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.daily-row {
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--color-border-light);
+  font-size: 26rpx;
+}
+
+.daily-row:last-child {
+  border-bottom: 0;
+}

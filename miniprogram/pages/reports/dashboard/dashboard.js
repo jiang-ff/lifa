@@ -1,66 +1,74 @@
-// pages/reports/dashboard/dashboard.js
+const app = getApp()
+
+function toNumber(value) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    loading: true,
+    period: "month",
+    dateLabel: "",
+    summary: { totalRecharge: 0, totalConsume: 0, totalNet: 0, newMembers: 0, totalMembers: 0, totalVisits: 0 },
+    daily: [],
+    topMembers: []
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  async onShow() {
+    if (typeof this.getTabBar === "function" && this.getTabBar()) {
+      this.getTabBar().setData({ selected: "/pages/reports/dashboard/dashboard" })
+    }
+    await this.loadStats()
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  async onPullDownRefresh() {
+    await this.loadStats()
+    wx.stopPullDownRefresh()
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
+  async loadStats() {
+    this.setData({ loading: true })
+    try {
+      const res = await wx.cloud.callFunction({
+        name: "reportService",
+        data: {
+          action: "getStats",
+          period: this.data.period
+        }
+      })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "stats_failed")
+      }
 
+      const data = result.data || {}
+      const start = new Date(data.start)
+      const end = new Date(data.end)
+
+      this.setData({
+        summary: {
+          totalRecharge: data.summary?.totalRecharge || 0,
+          totalConsume: data.summary?.totalConsume || 0,
+          totalNet: data.summary?.totalNet || 0,
+          newMembers: data.summary?.newMembers || 0,
+          totalMembers: data.summary?.totalMembers || 0,
+          totalVisits: data.summary?.totalVisits || 0
+        },
+        daily: data.daily || [],
+        topMembers: data.topMembers || [],
+        dateLabel: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")} ~ ${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`
+      })
+    } catch (err) {
+      wx.showToast({ title: "加载报表失败", icon: "none" })
+    } finally {
+      this.setData({ loading: false })
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  async setPeriod(e) {
+    const period = e.currentTarget.dataset.period
+    if (!period || period === this.data.period) return
+    this.setData({ period }, () => this.loadStats())
   }
 })

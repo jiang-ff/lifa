@@ -1,1 +1,13 @@
-/* pages/shop/team/team.wxss */
+.team-row {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--color-border-light);
+}
+
+.team-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.team-row:first-child {
+  padding-top: 0;
+}

@@ -7,7 +7,7 @@
     <view class="card hero">
       <view class="row" style="align-items: flex-start;">
         <view class="row" style="justify-content: flex-start; align-items: flex-start;">
-          <view class="avatar hero-avatar">{{avatarText}}</view>
+          <view class="avatar avatar-lg">{{avatarText}}</view>
           <view style="margin-left: 16rpx;">
             <view style="font-size: 40rpx; font-weight: 900;">{{member.name || "未命名会员"}}</view>
             <view class="muted" style="margin-top: 8rpx;">{{member.phone || "-"}}</view>
@@ -60,6 +60,23 @@
         <view style="text-align:right;">
           <view class="muted" style="font-size: 24rpx;">净额</view>
           <view style="font-size: 34rpx; font-weight: 900;">{{stats.net >= 0 ? "+" : ""}}{{stats.net}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view style="height: 16rpx;"></view>
+
+    <view class="card">
+      <view class="row">
+        <view>
+          <view style="font-weight: 900;">到店记录</view>
+          <view class="muted" style="font-size: 24rpx; margin-top: 6rpx;">到店次数 {{visitCount}} 次 · 最近到店 {{lastVisitText}}</view>
+          <view wx:if="{{repurchaseAlert}}" style="margin-top: 6rpx;">
+            <view class="chip chip-red">复购提醒：已超 {{repurchaseAlert}} 天未到店</view>
+          </view>
+        </view>
+        <view class="row gap-12">
+          <button class="btn-secondary" size="mini" bindtap="onVisitRecord" loading="{{visitLoading}}">到店登记</button>
         </view>
       </view>
     </view>

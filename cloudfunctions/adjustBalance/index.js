@@ -52,7 +52,7 @@ async function ensureShopContext(openId) {
     membership = {
       shopId: shop._id,
       userOpenId: openId,
-      role: "owner",
+      role: "manager",
       createdAt: now,
       updatedAt: now
     }

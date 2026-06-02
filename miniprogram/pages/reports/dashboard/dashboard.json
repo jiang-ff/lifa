@@ -1,3 +1,4 @@
 {
-  "usingComponents": {}
+  "navigationBarTitleText": "经营报表",
+  "enablePullDownRefresh": true
 }

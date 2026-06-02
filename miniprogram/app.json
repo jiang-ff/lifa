@@ -1,18 +1,26 @@
 {
   "pages": [
     "pages/members/list/list",
-    "pages/shop/settings/settings",
-    "pages/shop/team/team",
     "pages/reports/dashboard/dashboard",
+    "pages/shop/team/team",
+    "pages/shop/settings/settings",
     "pages/members/edit/edit",
     "pages/members/detail/detail"
   ],
   "window": {
     "navigationBarTitleText": "理发店会员",
-    "navigationBarBackgroundColor": "#111827",
+    "navigationBarBackgroundColor": "#4F46E5",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f5f5f5",
+    "backgroundColor": "#F1F5F9",
     "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "custom": true,
+    "list": [
+      { "pagePath": "pages/members/list/list", "text": "会员" },
+      { "pagePath": "pages/reports/dashboard/dashboard", "text": "报表" },
+      { "pagePath": "pages/shop/team/team", "text": "团队" }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

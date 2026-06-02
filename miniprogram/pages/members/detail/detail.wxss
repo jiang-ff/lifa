@@ -1,29 +1,22 @@
 .hero {
   background: linear-gradient(
     135deg,
-    rgba(17, 24, 39, 0.06),
-    rgba(37, 99, 235, 0.1)
+    rgba(79, 70, 229, 0.06),
+    rgba(99, 102, 241, 0.03)
   );
-}
-
-.hero-avatar {
-  background: linear-gradient(135deg, #111827, #2563eb);
-}
-
-.amount-plus {
-  color: #059669;
-}
-
-.amount-minus {
-  color: #dc2626;
+  border: 1rpx solid rgba(79, 70, 229, 0.08);
 }
 
 .tx {
   padding: 16rpx 0;
-  border-top: 1rpx solid #eef0f4;
+  border-top: 1rpx solid var(--color-border);
 }
 
 .tx:first-child {
   border-top: 0;
   padding-top: 0;
+}
+
+.tx:last-child {
+  padding-bottom: 0;
 }
