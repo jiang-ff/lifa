@@ -1,5 +1,3 @@
-const db = wx.cloud.database()
-
 function formatTime(ts) {
   if (!ts) return "-"
   const d = new Date(ts)
@@ -52,66 +50,51 @@ Page({
   async refreshAll() {
     this.setData({ loading: true })
     try {
-      await Promise.all([this.fetchMember(), this.fetchTransactions()])
+      const res = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "getMemberDetail",
+          memberId: this.data.id
+        }
+      })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "detail_failed")
+      }
+
+      const member = result.data?.member || {}
+      const rawTransactions = result.data?.transactions || []
+      const transactions = rawTransactions.map((t) => {
+        const amountNum = toNumber(t.amount)
+        return {
+          ...t,
+          typeText: t.type === "recharge" ? "充值" : t.type === "consume" ? "消费" : "调整",
+          typeChipClass:
+            t.type === "recharge" ? "chip-green" : t.type === "consume" ? "chip-red" : "chip-gray",
+          amountText: `${amountNum >= 0 ? "+" : ""}${amountNum}`,
+          amountClass: amountNum >= 0 ? "amount-plus" : "amount-minus",
+          timeText: formatTime(t.createdAt)
+        }
+      })
+
+      this.setData({
+        member: {
+          ...member,
+          balance: typeof member.balance === "number" ? member.balance : 0
+        },
+        avatarText: avatarText(member.name),
+        transactions,
+        stats: {
+          totalRecharge: toNumber(result.data?.stats?.totalRecharge),
+          totalConsume: toNumber(result.data?.stats?.totalConsume),
+          net: toNumber(result.data?.stats?.net)
+        }
+      })
+    } catch (err) {
+      wx.showToast({ title: "加载详情失败", icon: "none" })
     } finally {
       this.setData({ loading: false })
     }
-  },
-
-  async fetchMember() {
-    const res = await db.collection("members").doc(this.data.id).get()
-    const m = res.data || {}
-    this.setData({
-      member: {
-        ...m,
-        balance: typeof m.balance === "number" ? m.balance : 0
-      },
-      avatarText: avatarText(m.name)
-    })
-  },
-
-  async fetchTransactions() {
-    const res = await db
-      .collection("member_transactions")
-      .where({ memberId: this.data.id })
-      .orderBy("createdAt", "desc")
-      .limit(30)
-      .get()
-    const rawList = res.data || []
-    let totalRecharge = 0
-    let totalConsume = 0
-    let net = 0
-
-    const list = rawList.map((t) => {
-      const typeText = t.type === "recharge" ? "充值" : t.type === "consume" ? "消费" : "调整"
-      const amountNum = toNumber(t.amount)
-      const amountText = `${amountNum >= 0 ? "+" : ""}${amountNum}`
-
-      if (t.type === "recharge") totalRecharge += Math.abs(amountNum)
-      if (t.type === "consume") totalConsume += Math.abs(amountNum)
-      net += amountNum
-
-      const typeChipClass =
-        t.type === "recharge" ? "chip-green" : t.type === "consume" ? "chip-red" : "chip-gray"
-
-      return {
-        ...t,
-        typeText,
-        typeChipClass,
-        amountText,
-        amountClass: amountNum >= 0 ? "amount-plus" : "amount-minus",
-        timeText: formatTime(t.createdAt)
-      }
-    })
-
-    this.setData({
-      transactions: list,
-      stats: {
-        totalRecharge,
-        totalConsume,
-        net: net >= 0 ? `+${net}` : `${net}`
-      }
-    })
   },
 
   goEdit() {
@@ -155,7 +138,7 @@ Page({
     const res = await wx.showModal({
       title,
       editable: true,
-      placeholderText: type === "adjust" ? "比如 -20 或 100" : "请输入数字，比如 100",
+      placeholderText: type === "adjust" ? "例如 -20 或 100" : "请输入数字，例如 100",
       confirmText: "确定"
     })
     if (!res.confirm) return
@@ -170,7 +153,7 @@ Page({
     const remarkRes = await wx.showModal({
       title: "备注（可选）",
       editable: true,
-      placeholderText: "比如：充值卡/洗剪吹套餐…",
+      placeholderText: "例如：洗剪吹、烫染套餐、手工调账",
       confirmText: "提交"
     })
     const remark = remarkRes.confirm ? (remarkRes.content || "").trim() : ""
@@ -193,27 +176,15 @@ Page({
             ? "余额不足"
             : result?.message === "not_found"
               ? "会员不存在"
-              : "云函数版本不对"
+              : result?.message === "forbidden"
+                ? "不能操作其他店铺会员"
+                : "余额操作失败"
         wx.showToast({ title: msg, icon: "none" })
-        await wx.showModal({
-          title: "调试信息",
-          content: `返回结果：${JSON.stringify(result || null)}`,
-          showCancel: false,
-          confirmText: "知道了"
-        })
         return
       }
 
-      if (typeof result?.afterBalance === "number") {
-        this.setData({ "member.balance": result.afterBalance })
-      }
       wx.showToast({ title: "已记录", icon: "success" })
-      const expected = typeof result?.afterBalance === "number" ? result.afterBalance : null
       await this.refreshAll()
-      const actual = this.data.member?.balance
-      if (typeof expected === "number" && typeof actual === "number" && actual !== expected) {
-        wx.showToast({ title: "数据未同步：检查云环境是否一致", icon: "none" })
-      }
     } catch (err) {
       wx.showToast({ title: "操作失败", icon: "none" })
     } finally {

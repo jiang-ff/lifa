@@ -1,6 +1,9 @@
 {
   "pages": [
     "pages/members/list/list",
+    "pages/shop/settings/settings",
+    "pages/shop/team/team",
+    "pages/reports/dashboard/dashboard",
     "pages/members/edit/edit",
     "pages/members/detail/detail"
   ],

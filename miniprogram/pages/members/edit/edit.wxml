@@ -1,13 +1,21 @@
 <view class="container safe-bottom">
   <view class="card">
+    <view class="subtitle">当前店铺</view>
+    <view style="margin-top: 8rpx; font-size: 34rpx; font-weight: 800;">{{shopName || "未命名店铺"}}</view>
+    <view class="muted" style="margin-top: 8rpx;">新增和编辑的会员都会归属到当前店铺，不会和其他理发店混在一起。</view>
+  </view>
+
+  <view style="height: 16rpx;"></view>
+
+  <view class="card">
     <view class="field">
       <view class="label">姓名</view>
-      <input class="input" value="{{form.name}}" placeholder="比如：张三" bindinput="onInput" data-field="name" />
+      <input class="input" value="{{form.name}}" placeholder="例如：张三" bindinput="onInput" data-field="name" />
     </view>
 
     <view class="field">
       <view class="label">手机号</view>
-      <input class="input" value="{{form.phone}}" placeholder="用于联系/搜索（建议填）" type="number" bindinput="onInput" data-field="phone" />
+      <input class="input" value="{{form.phone}}" placeholder="用于联系和搜索，建议填写" type="number" bindinput="onInput" data-field="phone" />
     </view>
 
     <view class="field">
@@ -26,7 +34,7 @@
 
     <view class="field">
       <view class="label">备注</view>
-      <textarea class="input" value="{{form.note}}" placeholder="比如：剪发偏好/禁忌…" auto-height bindinput="onInput" data-field="note" />
+      <textarea class="input" value="{{form.note}}" placeholder="例如：发型偏好、忌口、染烫记录" auto-height bindinput="onInput" data-field="note" />
     </view>
   </view>
 
@@ -37,12 +45,12 @@
       <view class="row">
         <view>
           <view style="font-weight: 800;">当前余额</view>
-          <view class="muted" style="margin-top: 6rpx; font-size: 24rpx;">余额不建议在编辑页改，避免账对不上。</view>
+          <view class="muted" style="margin-top: 6rpx; font-size: 24rpx;">余额建议在详情页调整，流水更清晰，也更方便后续对账。</view>
         </view>
         <view style="text-align:right;">
           <view style="font-size: 40rpx; font-weight: 900;">¥ {{currentBalance}}</view>
           <view style="height: 10rpx;"></view>
-          <view class="chip chip-outline" bindtap="goDetail">去详情调整</view>
+          <view class="chip chip-outline" bindtap="goDetail">去详情页调整</view>
         </view>
       </view>
     </block>
@@ -52,7 +60,7 @@
         <view class="label">初始余额</view>
         <input class="input" value="{{form.balance}}" placeholder="0" type="digit" bindinput="onInput" data-field="balance" />
       </view>
-      <view class="muted" style="font-size: 24rpx;">后续充值/消费请在详情页操作，账更清楚。</view>
+      <view class="muted" style="font-size: 24rpx;">后续的充值和消费请在会员详情页操作，便于保留完整流水。</view>
     </block>
   </view>
 

@@ -1,0 +1,7 @@
+.field {
+  border-bottom: 1rpx solid #eef0f4;
+}
+
+.field:last-child {
+  border-bottom: 0;
+}

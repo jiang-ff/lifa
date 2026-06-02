@@ -1,3 +1,9 @@
 {
-  "rules": []
+  "desc": "理发店会员小程序站点地图",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
 }

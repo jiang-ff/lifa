@@ -1,0 +1,47 @@
+<view class="container safe-bottom">
+  <block wx:if="{{loading}}">
+    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中...</view>
+  </block>
+
+  <block wx:else>
+    <view class="card">
+      <view class="field">
+        <view class="label">店铺名称</view>
+        <input class="input" value="{{form.name}}" placeholder="例如：阿杰造型" bindinput="onInput" data-field="name" />
+      </view>
+
+      <view class="field">
+        <view class="label">联系人</view>
+        <input class="input" value="{{form.contactName}}" placeholder="例如：店主姓名" bindinput="onInput" data-field="contactName" />
+      </view>
+
+      <view class="field">
+        <view class="label">联系电话</view>
+        <input class="input" value="{{form.phone}}" placeholder="用于会员联系和门店识别" type="number" bindinput="onInput" data-field="phone" />
+      </view>
+
+      <view class="field">
+        <view class="label">店铺地址</view>
+        <input class="input" value="{{form.address}}" placeholder="例如：XX 路 88 号" bindinput="onInput" data-field="address" />
+      </view>
+
+      <view class="field">
+        <view class="label">经营备注</view>
+        <textarea class="input" value="{{form.note}}" placeholder="例如：主打洗剪吹、染烫、儿童剪发" auto-height bindinput="onInput" data-field="note" />
+      </view>
+    </view>
+
+    <view style="height: 20rpx;"></view>
+
+    <view class="card-soft">
+      <view style="font-weight: 800;">这页解决什么问题</view>
+      <view class="muted" style="margin-top: 8rpx;">
+        现在每个微信登录用户会默认绑定自己的店铺，会员、余额、流水都会自动归属到该店铺，避免多家理发店共用一个通用会员库。
+      </view>
+    </view>
+
+    <view style="height: 24rpx;"></view>
+
+    <button class="btn" loading="{{saving}}" bindtap="onSave">保存店铺信息</button>
+  </block>
+</view>

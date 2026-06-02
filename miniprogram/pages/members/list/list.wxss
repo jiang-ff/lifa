@@ -1,3 +1,31 @@
+.shop-card {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.04), rgba(37, 99, 235, 0.12));
+}
+
+.stats-row {
+  gap: 14rpx;
+  align-items: stretch;
+}
+
+.metric {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 18rpx;
+  padding: 18rpx 16rpx;
+}
+
+.metric-label {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.metric-value {
+  margin-top: 10rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #111827;
+}
+
 .member-card {
   margin-bottom: 16rpx;
 }

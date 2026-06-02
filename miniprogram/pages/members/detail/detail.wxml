@@ -1,6 +1,6 @@
 <view class="container safe-bottom">
   <block wx:if="{{loading}}">
-    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中…</view>
+    <view class="muted" style="text-align:center; padding: 40rpx 0;">加载中...</view>
   </block>
 
   <block wx:else>
@@ -9,7 +9,7 @@
         <view class="row" style="justify-content: flex-start; align-items: flex-start;">
           <view class="avatar hero-avatar">{{avatarText}}</view>
           <view style="margin-left: 16rpx;">
-            <view style="font-size: 40rpx; font-weight: 900;">{{member.name || "未命名"}}</view>
+            <view style="font-size: 40rpx; font-weight: 900;">{{member.name || "未命名会员"}}</view>
             <view class="muted" style="margin-top: 8rpx;">{{member.phone || "-"}}</view>
             <view style="height: 10rpx;"></view>
             <view class="row" style="justify-content: flex-start;">
@@ -20,10 +20,10 @@
         </view>
 
         <view style="text-align:right;">
-          <view class="subtitle">余额</view>
+          <view class="subtitle">当前余额</view>
           <view style="font-size: 46rpx; font-weight: 900;">¥ {{member.balance || 0}}</view>
           <view style="height: 12rpx;"></view>
-          <view class="chip {{member.balance > 0 ? 'chip-green' : 'chip-gray'}}">{{member.balance > 0 ? '可消费' : '待充值'}}</view>
+          <view class="chip {{member.balance > 0 ? 'chip-green' : 'chip-gray'}}">{{member.balance > 0 ? "可消费" : "待充值"}}</view>
         </view>
       </view>
 
@@ -45,7 +45,7 @@
     <view class="card">
       <view class="row">
         <view style="font-weight: 900;">近 30 笔统计</view>
-        <view class="muted" style="font-size: 24rpx;">用于对账，不用于吹牛</view>
+        <view class="muted" style="font-size: 24rpx;">用于核对充值与消费</view>
       </view>
       <view style="height: 14rpx;"></view>
       <view class="row">
@@ -59,7 +59,7 @@
         </view>
         <view style="text-align:right;">
           <view class="muted" style="font-size: 24rpx;">净额</view>
-          <view style="font-size: 34rpx; font-weight: 900;">{{stats.net}}</view>
+          <view style="font-size: 34rpx; font-weight: 900;">{{stats.net >= 0 ? "+" : ""}}{{stats.net}}</view>
         </view>
       </view>
     </view>
@@ -68,8 +68,8 @@
 
     <view class="card">
       <view class="row">
-        <view style="font-weight: 900;">流水</view>
-        <view class="muted" style="font-size: 24rpx;">下拉刷新</view>
+        <view style="font-weight: 900;">流水记录</view>
+        <view class="muted" style="font-size: 24rpx;">下拉可刷新</view>
       </view>
       <view style="height: 16rpx;"></view>
 

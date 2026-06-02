@@ -1,11 +1,45 @@
 <view class="container safe-bottom">
+  <view class="card shop-card">
+    <view class="row" style="align-items: flex-start;">
+      <view style="flex: 1; padding-right: 20rpx;">
+        <view class="title">{{shop ? shop.shopName : "正在加载店铺"}}</view>
+        <view class="subtitle" style="margin-top: 8rpx;">
+          {{shop && shop.contactName ? shop.contactName : "未设置联系人"}} · {{shop && shop.phone ? shop.phone : "未设置联系电话"}}
+        </view>
+        <view class="subtitle" style="margin-top: 8rpx;">
+          按店铺隔离会员数据，当前店主只会看到自己店内的会员与流水
+        </view>
+      </view>
+      <button class="btn-secondary" size="mini" bindtap="goShopSettings">店铺设置</button>
+    </view>
+
+    <view style="height: 18rpx;"></view>
+
+    <view class="row stats-row">
+      <view class="metric">
+        <view class="metric-label">会员总数</view>
+        <view class="metric-value">{{stats.totalMembers}}</view>
+      </view>
+      <view class="metric">
+        <view class="metric-label">有余额会员</view>
+        <view class="metric-value">{{stats.balanceMembers}}</view>
+      </view>
+      <view class="metric">
+        <view class="metric-label">总余额</view>
+        <view class="metric-value">¥ {{stats.totalBalance}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view style="height: 16rpx;"></view>
+
   <view class="card">
     <view class="row">
       <view>
-        <view class="title">会员</view>
-        <view class="subtitle">共 {{membersTotal}} 位，今天也要把“本子”卷成“系统”</view>
+        <view class="title">会员列表</view>
+        <view class="subtitle">共 {{membersTotal}} 位，支持按手机号、姓名和余额快速筛选</view>
       </view>
-      <button class="btn-secondary" size="mini" bindtap="goAdd">新增</button>
+      <button class="btn" size="mini" bindtap="goAdd">新增会员</button>
     </view>
 
     <view style="height: 16rpx;"></view>
@@ -14,37 +48,37 @@
       <input
         class="input"
         value="{{keyword}}"
-        placeholder="搜姓名/手机号"
+        placeholder="搜索姓名或手机号"
         confirm-type="search"
         bindinput="onKeywordInput"
         bindconfirm="onSearch"
         style="flex: 1;"
       />
-      <button class="btn" size="mini" bindtap="onSearch">搜索</button>
+      <button class="btn-secondary" size="mini" bindtap="onSearch">搜索</button>
     </view>
 
     <view style="height: 14rpx;"></view>
 
     <view class="row gap-12">
       <view class="seg" style="flex: 1;">
-        <view class="seg-item {{sortKey === 'updatedAt' ? 'seg-item-active' : ''}}" bindtap="setSort" data-key="updatedAt">最近</view>
+        <view class="seg-item {{sortKey === 'updatedAt' ? 'seg-item-active' : ''}}" bindtap="setSort" data-key="updatedAt">最近更新</view>
         <view class="seg-item {{sortKey === 'balance' ? 'seg-item-active' : ''}}" bindtap="setSort" data-key="balance">余额</view>
         <view class="seg-item {{sortKey === 'name' ? 'seg-item-active' : ''}}" bindtap="setSort" data-key="name">姓名</view>
       </view>
-      <view class="chip chip-outline" bindtap="toggleHasBalance">{{hasBalanceOnly ? '仅有余额' : '全部'}}</view>
+      <view class="chip chip-outline" bindtap="toggleHasBalance">{{hasBalanceOnly ? "仅有余额" : "全部会员"}}</view>
     </view>
   </view>
 
   <view style="height: 16rpx;"></view>
 
   <block wx:if="{{loading}}">
-    <view class="muted" style="text-align: center; padding: 40rpx 0;">加载中…</view>
+    <view class="muted" style="text-align: center; padding: 40rpx 0;">加载中...</view>
   </block>
 
   <block wx:elif="{{members.length === 0}}">
     <view class="card" style="text-align: center;">
       <view style="font-size: 32rpx; font-weight: 800;">还没有会员</view>
-      <view class="muted" style="margin-top: 10rpx;">先来一位“Tony 老师指定客户”，让系统见识下什么叫复购。</view>
+      <view class="muted" style="margin-top: 10rpx;">先录入第一位会员，后续就可以持续记录充值、消费和客户偏好。</view>
       <view style="height: 18rpx;"></view>
       <button class="btn-secondary" bindtap="goAdd">新增会员</button>
     </view>
@@ -56,7 +90,7 @@
         <view class="row" style="justify-content: flex-start;">
           <view class="avatar">{{item.avatarText}}</view>
           <view style="margin-left: 16rpx;">
-            <view style="font-size: 34rpx; font-weight: 800;">{{item.name || "未命名"}}</view>
+            <view style="font-size: 34rpx; font-weight: 800;">{{item.name || "未命名会员"}}</view>
             <view class="muted" style="margin-top: 6rpx;">{{item.phone || "-"}} · {{item.updatedText}}</view>
           </view>
         </view>

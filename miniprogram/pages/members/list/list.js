@@ -1,5 +1,4 @@
-const db = wx.cloud.database()
-const _ = db.command
+const app = getApp()
 
 function formatTime(ts) {
   if (!ts) return "-"
@@ -19,23 +18,54 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : 0
 }
 
+function normalizeMembers(list) {
+  return (list || []).map((member) => {
+    const balance = typeof member.balance === "number" ? member.balance : 0
+    return {
+      ...member,
+      balance,
+      avatarText: avatarText(member.name),
+      updatedText: formatTime(member.updatedAt || member.createdAt)
+    }
+  })
+}
+
 Page({
   data: {
     keyword: "",
-    loading: false,
+    loading: true,
     members: [],
     membersTotal: 0,
     sortKey: "updatedAt",
-    hasBalanceOnly: false
+    hasBalanceOnly: false,
+    shop: null,
+    stats: {
+      totalMembers: 0,
+      balanceMembers: 0,
+      totalBalance: 0
+    }
   },
 
-  onShow() {
-    this.fetchMembers()
+  async onShow() {
+    await this.initializePage()
   },
 
   async onPullDownRefresh() {
-    await this.fetchMembers()
+    await this.initializePage({ forceRefresh: true })
     wx.stopPullDownRefresh()
+  },
+
+  async initializePage(options = {}) {
+    this.setData({ loading: true })
+    try {
+      const shop = await app.ensureShopContext({ forceRefresh: !!options.forceRefresh })
+      this.setData({ shop })
+      await this.fetchMembers()
+    } catch (err) {
+      wx.showToast({ title: "加载店铺失败", icon: "none" })
+    } finally {
+      this.setData({ loading: false })
+    }
   },
 
   onKeywordInput(e) {
@@ -47,50 +77,35 @@ Page({
   },
 
   async fetchMembers() {
+    const { keyword, sortKey, hasBalanceOnly } = this.data
     this.setData({ loading: true })
-    const keyword = (this.data.keyword || "").trim()
-    const sortKey = this.data.sortKey
-    const hasBalanceOnly = !!this.data.hasBalanceOnly
-
     try {
-      let query = db.collection("members")
-
-      const conditions = []
-      if (keyword) {
-        const reg = db.RegExp({ regexp: keyword, options: "i" })
-        conditions.push(_.or([{ name: reg }, { phone: reg }]))
-      }
-
-      if (hasBalanceOnly) {
-        conditions.push({ balance: _.gt(0) })
-      }
-
-      if (conditions.length === 1) query = query.where(conditions[0])
-      if (conditions.length >= 2) query = query.where(_.and(conditions))
-
-      if (sortKey === "balance") query = query.orderBy("balance", "desc")
-      if (sortKey === "name") query = query.orderBy("name", "asc")
-      if (sortKey === "updatedAt") query = query.orderBy("updatedAt", "desc")
-
-      const jobs = [query.limit(50).get()]
-      if (!keyword && !hasBalanceOnly) jobs.push(db.collection("members").count())
-
-      const [listRes, countRes] = await Promise.all(jobs)
-
-      const members = (listRes.data || []).map((m) => {
-        const balance = typeof m.balance === "number" ? m.balance : 0
-        return {
-          ...m,
-          balance,
-          avatarText: avatarText(m.name),
-          updatedText: formatTime(m.updatedAt || m.createdAt)
+      const res = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "listMembers",
+          keyword: (keyword || "").trim(),
+          sortKey,
+          hasBalanceOnly
         }
       })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "list_failed")
+      }
 
-      const membersTotal = countRes ? countRes.total : members.length
-      this.setData({ members, membersTotal })
+      const members = normalizeMembers(result.data?.members)
+      this.setData({
+        members,
+        membersTotal: result.data?.total || members.length,
+        stats: {
+          totalMembers: toNumber(result.data?.stats?.totalMembers),
+          balanceMembers: toNumber(result.data?.stats?.balanceMembers),
+          totalBalance: toNumber(result.data?.stats?.totalBalance)
+        }
+      })
     } catch (err) {
-      wx.showToast({ title: "加载失败", icon: "none" })
+      wx.showToast({ title: "加载会员失败", icon: "none" })
     } finally {
       this.setData({ loading: false })
     }
@@ -104,6 +119,10 @@ Page({
 
   toggleHasBalance() {
     this.setData({ hasBalanceOnly: !this.data.hasBalanceOnly }, () => this.fetchMembers())
+  },
+
+  goShopSettings() {
+    wx.navigateTo({ url: "/pages/shop/settings/settings" })
   },
 
   goAdd() {
@@ -145,7 +164,7 @@ Page({
     const res = await wx.showModal({
       title,
       editable: true,
-      placeholderText: "输入金额，比如 100",
+      placeholderText: "输入金额，例如 100",
       confirmText: "下一步"
     })
     if (!res.confirm) return
@@ -159,7 +178,7 @@ Page({
     const remarkRes = await wx.showModal({
       title: "备注（可选）",
       editable: true,
-      placeholderText: "比如：充值卡/洗剪吹套餐…",
+      placeholderText: "例如：充卡、洗剪吹套餐",
       confirmText: "提交"
     })
     const remark = remarkRes.confirm ? (remarkRes.content || "").trim() : ""
@@ -176,22 +195,11 @@ Page({
             ? "余额不足"
             : result?.message === "not_found"
               ? "会员不存在"
-              : "云函数版本不对"
+              : result?.message === "forbidden"
+                ? "不能操作其他店铺会员"
+                : "余额操作失败"
         wx.showToast({ title: msg, icon: "none" })
-        await wx.showModal({
-          title: "调试信息",
-          content: `返回结果：${JSON.stringify(result || null)}`,
-          showCancel: false,
-          confirmText: "知道了"
-        })
         return
-      }
-
-      if (typeof result?.afterBalance === "number") {
-        const members = (this.data.members || []).map((m) =>
-          m._id === memberId ? { ...m, balance: result.afterBalance } : m
-        )
-        this.setData({ members })
       }
 
       wx.showToast({ title: "已记录", icon: "success" })

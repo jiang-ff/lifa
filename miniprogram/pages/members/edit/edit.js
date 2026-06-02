@@ -1,4 +1,4 @@
-const db = wx.cloud.database()
+const app = getApp()
 
 function toNumber(value) {
   const n = Number(value)
@@ -11,6 +11,7 @@ Page({
     isEdit: false,
     saving: false,
     currentBalance: 0,
+    shopName: "",
     genderOptions: ["未知", "男", "女"],
     genderIndex: 0,
     form: {
@@ -25,6 +26,13 @@ Page({
 
   async onLoad(options) {
     const id = options?.id || ""
+    try {
+      const shop = await app.ensureShopContext()
+      this.setData({ shopName: shop.shopName || "" })
+    } catch (err) {
+      wx.showToast({ title: "加载店铺失败", icon: "none" })
+    }
+
     if (!id) return
 
     wx.setNavigationBarTitle({ title: "编辑会员" })
@@ -34,8 +42,19 @@ Page({
 
   async fetchMember() {
     try {
-      const res = await db.collection("members").doc(this.data.id).get()
-      const m = res.data
+      const res = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "getMember",
+          memberId: this.data.id
+        }
+      })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "get_member_failed")
+      }
+
+      const m = result.data?.member || {}
       const genderIndex = Math.max(0, this.data.genderOptions.indexOf(m.gender || "未知"))
       const balance = typeof m.balance === "number" ? m.balance : 0
       this.setData({
@@ -51,7 +70,7 @@ Page({
         }
       })
     } catch (err) {
-      wx.showToast({ title: "加载失败", icon: "none" })
+      wx.showToast({ title: "加载会员失败", icon: "none" })
     }
   },
 
@@ -92,40 +111,32 @@ Page({
 
     this.setData({ saving: true })
     try {
-      const now = Date.now()
-      const payloadBase = {
-        name,
-        phone,
-        gender: form.gender || "未知",
-        birthday: form.birthday || "",
-        note: (form.note || "").trim(),
-        updatedAt: now
-      }
-
-      if (phone) {
-        const existRes = await db.collection("members").where({ phone }).limit(1).get()
-        const exist = (existRes.data || [])[0]
-        if (exist && (!this.data.isEdit || exist._id !== this.data.id)) {
-          wx.showToast({ title: "手机号已存在", icon: "none" })
-          return
+      const res = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "saveMember",
+          memberId: this.data.id,
+          name,
+          phone,
+          gender: form.gender || "未知",
+          birthday: form.birthday || "",
+          note: (form.note || "").trim(),
+          balance
         }
-      }
-
-      if (this.data.isEdit) {
-        await db.collection("members").doc(this.data.id).update({ data: payloadBase })
-        wx.showToast({ title: "已保存", icon: "success" })
-        wx.navigateBack()
+      })
+      const result = res?.result
+      if (!result || result.ok !== true) {
+        const msg =
+          result?.message === "phone_exists"
+            ? "该手机号已存在"
+            : result?.message === "not_found"
+              ? "会员不存在"
+              : "保存失败"
+        wx.showToast({ title: msg, icon: "none" })
         return
       }
 
-      await db.collection("members").add({
-        data: {
-          ...payloadBase,
-          balance,
-          createdAt: now
-        }
-      })
-      wx.showToast({ title: "已创建", icon: "success" })
+      wx.showToast({ title: this.data.isEdit ? "已保存" : "已创建", icon: "success" })
       wx.navigateBack()
     } catch (err) {
       wx.showToast({ title: "保存失败", icon: "none" })
@@ -144,14 +155,25 @@ Page({
 
     const res = await wx.showModal({
       title: "删除会员",
-      content: "确定要删除该会员？余额与流水也会失去关联。",
+      content: "确定要删除这位会员吗？该会员的余额和流水记录也会一并删除。",
       confirmText: "删除",
       confirmColor: "#ef4444"
     })
     if (!res.confirm) return
 
     try {
-      await db.collection("members").doc(this.data.id).remove()
+      const callRes = await wx.cloud.callFunction({
+        name: "memberService",
+        data: {
+          action: "deleteMember",
+          memberId: this.data.id
+        }
+      })
+      const result = callRes?.result
+      if (!result || result.ok !== true) {
+        throw new Error(result?.message || "delete_failed")
+      }
+
       wx.showToast({ title: "已删除", icon: "success" })
       wx.navigateBack()
     } catch (err) {
