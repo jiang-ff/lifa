@@ -1,8 +1,16 @@
 <view class="container safe-bottom">
-  <view class="card">
+  <block wx:if="{{noPermission}}">
+    <view class="card empty-state">
+      <view class="section-title">暂无编辑权限</view>
+      <view class="section-caption">当前账号不能新增或编辑会员资料，如需操作请使用店长账号。</view>
+    </view>
+  </block>
+
+  <block wx:else>
+  <view class="card card-highlight edit-head">
     <view class="subtitle">当前店铺</view>
-    <view style="margin-top: 8rpx; font-size: 34rpx; font-weight: 800;">{{shopName || "未命名店铺"}}</view>
-    <view class="muted" style="margin-top: 8rpx;">新增和编辑的会员都会归属到当前店铺，不会和其他理发店混在一起。</view>
+    <view class="edit-shop-name">{{shopName || "未命名店铺"}}</view>
+    <view class="muted edit-note">新增和编辑的会员都会归属到当前店铺，不会和其他理发店混在一起。</view>
   </view>
 
   <view style="height: 16rpx;"></view>
@@ -44,11 +52,11 @@
     <block wx:if="{{isEdit}}">
       <view class="row">
         <view>
-          <view style="font-weight: 800;">当前余额</view>
+          <view class="section-title">当前余额</view>
           <view class="muted" style="margin-top: 6rpx; font-size: 24rpx;">余额建议在详情页调整，流水更清晰，也更方便后续对账。</view>
         </view>
-        <view style="text-align:right;">
-          <view style="font-size: 40rpx; font-weight: 900;">¥ {{currentBalance}}</view>
+        <view class="balance-side">
+          <view class="edit-balance">¥ {{currentBalance}}</view>
           <view style="height: 10rpx;"></view>
           <view class="chip chip-outline" bindtap="goDetail">去详情页调整</view>
         </view>
@@ -56,11 +64,14 @@
     </block>
 
     <block wx:else>
-      <view class="field">
-        <view class="label">初始余额</view>
-        <input class="input" value="{{form.balance}}" placeholder="0" type="digit" bindinput="onInput" data-field="balance" />
-      </view>
-      <view class="muted" style="font-size: 24rpx;">后续的充值和消费请在会员详情页操作，便于保留完整流水。</view>
+      <block wx:if="{{shop && shop.canWriteBalance}}">
+        <view class="field">
+          <view class="label">初始余额</view>
+          <input class="input" value="{{form.balance}}" placeholder="0" type="digit" bindinput="onInput" data-field="balance" />
+        </view>
+        <view class="muted" style="font-size: 24rpx;">后续的充值和消费请在会员详情页操作，便于保留完整流水。</view>
+      </block>
+      <view wx:else class="muted" style="font-size: 24rpx;">当前角色可录入会员资料，但不能设置初始余额。</view>
     </block>
   </view>
 
@@ -70,5 +81,6 @@
 
   <view style="height: 16rpx;"></view>
 
-  <button wx:if="{{isEdit}}" class="btn-danger" bindtap="onDelete">删除会员</button>
+  <button wx:if="{{isEdit && shop && shop.canDeleteMember}}" class="btn-danger" bindtap="onDelete">删除会员</button>
+  </block>
 </view>

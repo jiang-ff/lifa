@@ -85,31 +85,19 @@
   </block>
 
   <block wx:else>
-    <view wx:for="{{members}}" wx:key="_id" class="card member-card">
-      <view class="row" bindtap="goDetail" data-id="{{item._id}}">
-        <view class="row" style="justify-content: flex-start;">
+    <view class="member-grid">
+      <view wx:for="{{members}}" wx:key="_id" class="card member-card" bindtap="goDetail" data-id="{{item._id}}">
+        <view class="member-card-top">
           <view class="avatar">{{item.avatarText}}</view>
-          <view style="margin-left: 16rpx;">
-            <view style="font-size: 34rpx; font-weight: 800;">{{item.name || "未命名会员"}}</view>
-            <view class="muted" style="margin-top: 6rpx;">{{item.phone || "-"}} · {{item.updatedText}}</view>
-          </view>
+          <view wx:if="{{item.needRemind}}" class="remind-dot"></view>
         </view>
-
-        <view style="text-align: right;">
-          <view class="chip {{item.balance > 0 ? 'chip-green' : 'chip-gray'}}">¥ {{item.balance}}</view>
-          <view class="muted" style="margin-top: 10rpx; font-size: 24rpx;">点击查看</view>
+        <view class="member-card-name">{{item.name || "未命名"}}</view>
+        <view class="member-card-phone">{{item.phone || "-"}}</view>
+        <view class="member-card-balance {{item.balance > 0 ? 'balance-positive' : 'balance-zero'}}">¥{{item.balance}}</view>
+        <view class="member-card-actions">
+          <view class="chip chip-outline" catchtap="quickRecharge" data-id="{{item._id}}">充值</view>
+          <view class="chip chip-outline" catchtap="quickConsume" data-id="{{item._id}}">消费</view>
         </view>
-      </view>
-
-      <view style="height: 16rpx;"></view>
-      <view wx:if="{{item.needRemind}}" style="margin-bottom: 10rpx;">
-        <view class="chip chip-red" style="font-size: 22rpx;">⚠ 已 {{item.daysSinceVisit}} 天未到店</view>
-      </view>
-      <view class="row gap-12">
-        <view class="chip chip-outline" bindtap="quickRecharge" data-id="{{item._id}}">充值</view>
-        <view class="chip chip-outline" bindtap="quickConsume" data-id="{{item._id}}">消费</view>
-        <view class="chip chip-outline" bindtap="goEdit" data-id="{{item._id}}">编辑</view>
-        <view class="chip chip-outline" bindtap="callPhone" data-phone="{{item.phone}}">拨打</view>
       </view>
     </view>
   </block>

@@ -2,8 +2,10 @@ const cloud = require("wx-server-sdk")
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
-const db = cloud.database()
+const db = cloud.database({ env: cloud.DYNAMIC_CURRENT_ENV })
 const _ = db.command
+
+const FUNCTION_NAME = "shopService"
 
 const ROLE_TEXT = {
   manager: "店长",
@@ -11,8 +13,8 @@ const ROLE_TEXT = {
 }
 
 const ROLE_PERMISSIONS = {
-  manager: ["shop.update", "staff.manage", "member.write", "member.delete", "balance.write", "report.view"],
-  staff: ["member.write", "balance.write"]
+  manager: ["shop.update", "staff.manage", "member.write", "member.delete", "balance.write", "visit.write", "report.view"],
+  staff: ["member.write", "visit.write"]
 }
 
 function trimString(value) {
@@ -36,8 +38,53 @@ function createInviteCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase()
 }
 
+function summarizeError(error) {
+  if (!error) return ""
+  if (typeof error === "string") return error
+  return error.message || String(error)
+}
+
+function pickActionResult(result) {
+  if (!result) return { ok: false, message: "empty_result" }
+  return {
+    ok: result.ok === true,
+    message: result.message || "",
+    code: result.code || ""
+  }
+}
+
+async function writeFunctionLog(entry) {
+  try {
+    await db.collection("function_logs").add({
+      data: {
+        ...entry,
+        createdAt: Date.now()
+      }
+    })
+  } catch (error) {
+    console.error("writeFunctionLog failed", summarizeError(error))
+  }
+}
+
+async function writeAuditLog(entry) {
+  try {
+    await db.collection("operation_audits").add({
+      data: {
+        ...entry,
+        createdAt: Date.now()
+      }
+    })
+  } catch (error) {
+    console.error("writeAuditLog failed", summarizeError(error))
+  }
+}
+
 async function getMembershipByOpenId(openId) {
-  const res = await db.collection("shop_users").where({ userOpenId: openId, status: _.neq("removed") }).limit(1).get()
+  const res = await db
+    .collection("shop_users")
+    .where({ userOpenId: openId, status: _.neq("removed") })
+    .limit(1)
+    .get()
   return (res.data || [])[0] || null
 }
 
@@ -46,7 +93,7 @@ async function getShopById(shopId) {
   try {
     const res = await db.collection("shops").doc(shopId).get()
     return res.data || null
-  } catch (err) {
+  } catch (error) {
     return null
   }
 }
@@ -73,12 +120,18 @@ function buildContext(openId, membership, shop, createdNow) {
   const now = Date.now()
   const role = normalizeRole(membership.role || "manager")
   const permissions = ROLE_PERMISSIONS[role] || []
+
   return {
     openId,
     role,
     roleText: ROLE_TEXT[role] || "店长",
     permissions,
     canManageStaff: can(role, "staff.manage"),
+    canUpdateShop: can(role, "shop.update"),
+    canWriteMember: can(role, "member.write"),
+    canDeleteMember: can(role, "member.delete"),
+    canWriteBalance: can(role, "balance.write"),
+    canRecordVisit: can(role, "visit.write"),
     canViewReport: can(role, "report.view"),
     shopId: shop._id,
     shopName: shop.name || "我的理发店",
@@ -139,9 +192,7 @@ async function ensureShopContext(openId) {
 
 async function updateProfile(openId, profile) {
   const context = await ensureShopContext(openId)
-  if (!can(context.role, "shop.update")) {
-    return { ok: false, message: "forbidden" }
-  }
+  if (!context.canUpdateShop) return { ok: false, message: "forbidden" }
 
   const name = trimString(profile?.name)
   const contactName = trimString(profile?.contactName)
@@ -155,6 +206,16 @@ async function updateProfile(openId, profile) {
   const now = Date.now()
   await db.collection("shops").doc(context.shopId).update({
     data: { name, contactName, phone, address, note, updatedAt: now }
+  })
+
+  await writeAuditLog({
+    shopId: context.shopId,
+    operatorOpenId: openId,
+    operatorRole: context.role,
+    targetType: "shop",
+    targetId: context.shopId,
+    action: "shop.updateProfile",
+    detail: { name, contactName, phone, address, note }
   })
 
   return {
@@ -175,14 +236,11 @@ async function updateProfile(openId, profile) {
 
 async function listStaff(openId) {
   const context = await ensureShopContext(openId)
-  if (!can(context.role, "staff.manage")) return { ok: false, message: "forbidden" }
+  const filters = context.canManageStaff
+    ? { shopId: context.shopId, status: _.neq("removed") }
+    : { shopId: context.shopId, userOpenId: openId, status: _.neq("removed") }
 
-  const res = await db
-    .collection("shop_users")
-    .where({ shopId: context.shopId, status: _.neq("removed") })
-    .orderBy("createdAt", "asc")
-    .get()
-
+  const res = await db.collection("shop_users").where(filters).orderBy("createdAt", "asc").get()
   const staff = (res.data || []).map((item) => ({
     _id: item._id,
     displayName: item.displayName || (item.userOpenId === openId ? "我" : "未命名员工"),
@@ -198,7 +256,7 @@ async function listStaff(openId) {
 
 async function updateStaffRole(openId, event) {
   const context = await ensureShopContext(openId)
-  if (!can(context.role, "staff.manage")) return { ok: false, message: "forbidden" }
+  if (!context.canManageStaff) return { ok: false, message: "forbidden" }
 
   const staffId = trimString(event?.staffId)
   const role = normalizeRole(event?.role)
@@ -212,12 +270,23 @@ async function updateStaffRole(openId, event) {
   await db.collection("shop_users").doc(staffId).update({
     data: { role, updatedAt: Date.now() }
   })
+
+  await writeAuditLog({
+    shopId: context.shopId,
+    operatorOpenId: openId,
+    operatorRole: context.role,
+    targetType: "shop_user",
+    targetId: staffId,
+    action: "staff.updateRole",
+    detail: { userOpenId: staff.userOpenId, role }
+  })
+
   return { ok: true }
 }
 
 async function removeStaff(openId, event) {
   const context = await ensureShopContext(openId)
-  if (!can(context.role, "staff.manage")) return { ok: false, message: "forbidden" }
+  if (!context.canManageStaff) return { ok: false, message: "forbidden" }
 
   const staffId = trimString(event?.staffId)
   if (!staffId) return { ok: false, message: "staff_id_required" }
@@ -230,18 +299,86 @@ async function removeStaff(openId, event) {
   await db.collection("shop_users").doc(staffId).update({
     data: { status: "removed", updatedAt: Date.now() }
   })
+
+  await writeAuditLog({
+    shopId: context.shopId,
+    operatorOpenId: openId,
+    operatorRole: context.role,
+    targetType: "shop_user",
+    targetId: staffId,
+    action: "staff.remove",
+    detail: { userOpenId: staff.userOpenId }
+  })
+
   return { ok: true }
 }
 
 async function refreshInviteCode(openId) {
   const context = await ensureShopContext(openId)
-  if (!can(context.role, "staff.manage")) return { ok: false, message: "forbidden" }
+  if (!context.canManageStaff) return { ok: false, message: "forbidden" }
 
   const inviteCode = createInviteCode()
   await db.collection("shops").doc(context.shopId).update({
     data: { inviteCode, updatedAt: Date.now() }
   })
+
+  await writeAuditLog({
+    shopId: context.shopId,
+    operatorOpenId: openId,
+    operatorRole: context.role,
+    targetType: "shop",
+    targetId: context.shopId,
+    action: "shop.refreshInviteCode",
+    detail: { inviteCode }
+  })
+
   return { ok: true, data: { inviteCode } }
+}
+
+async function getMonitorLogs(context) {
+  if (!context.canManageStaff) return { ok: false, message: "forbidden" }
+
+  const [functionRes, auditRes] = await Promise.all([
+    db
+      .collection("function_logs")
+      .where({ shopId: context.shopId })
+      .field({
+        functionName: true,
+        action: true,
+        role: true,
+        ok: true,
+        message: true,
+        code: true,
+        errorMessage: true,
+        durationMs: true,
+        createdAt: true
+      })
+      .orderBy("createdAt", "desc")
+      .limit(12)
+      .get(),
+    db
+      .collection("operation_audits")
+      .where({ shopId: context.shopId })
+      .field({
+        targetType: true,
+        targetId: true,
+        action: true,
+        operatorRole: true,
+        detail: true,
+        createdAt: true
+      })
+      .orderBy("createdAt", "desc")
+      .limit(12)
+      .get()
+  ])
+
+  return {
+    ok: true,
+    data: {
+      functionLogs: functionRes.data || [],
+      operationAudits: auditRes.data || []
+    }
+  }
 }
 
 async function joinByInviteCode(openId, event) {
@@ -259,6 +396,17 @@ async function joinByInviteCode(openId, event) {
     await db.collection("shop_users").doc(membership._id).update({
       data: { displayName, status: "active", updatedAt: now }
     })
+
+    await writeAuditLog({
+      shopId: shop._id,
+      operatorOpenId: openId,
+      operatorRole: normalizeRole(membership.role),
+      targetType: "shop_user",
+      targetId: membership._id,
+      action: "staff.joinByInviteCode",
+      detail: { displayName, mode: "refresh_self_profile" }
+    })
+
     return { ok: true, data: buildContext(openId, { ...membership, displayName }, shop, false) }
   }
 
@@ -272,8 +420,18 @@ async function joinByInviteCode(openId, event) {
         updatedAt: now
       }
     })
+
+    await writeAuditLog({
+      shopId: shop._id,
+      operatorOpenId: openId,
+      operatorRole: "staff",
+      targetType: "shop_user",
+      targetId: membership._id,
+      action: "staff.joinByInviteCode",
+      detail: { displayName, mode: "move_to_new_shop" }
+    })
   } else {
-    await db.collection("shop_users").add({
+    const addRes = await db.collection("shop_users").add({
       data: {
         shopId: shop._id,
         userOpenId: openId,
@@ -284,6 +442,16 @@ async function joinByInviteCode(openId, event) {
         updatedAt: now
       }
     })
+
+    await writeAuditLog({
+      shopId: shop._id,
+      operatorOpenId: openId,
+      operatorRole: "staff",
+      targetType: "shop_user",
+      targetId: addRes._id,
+      action: "staff.joinByInviteCode",
+      detail: { displayName, mode: "new_join" }
+    })
   }
 
   return {
@@ -293,17 +461,53 @@ async function joinByInviteCode(openId, event) {
 }
 
 exports.main = async (event) => {
+  const startedAt = Date.now()
   const { OPENID } = cloud.getWXContext()
   const action = event?.action || "getContext"
 
-  if (!OPENID) return { ok: false, message: "openid_missing" }
-  if (action === "getContext") return { ok: true, data: await ensureShopContext(OPENID) }
-  if (action === "updateProfile") return updateProfile(OPENID, event?.profile || {})
-  if (action === "listStaff") return listStaff(OPENID)
-  if (action === "updateStaffRole") return updateStaffRole(OPENID, event)
-  if (action === "removeStaff") return removeStaff(OPENID, event)
-  if (action === "refreshInviteCode") return refreshInviteCode(OPENID)
-  if (action === "joinByInviteCode") return joinByInviteCode(OPENID, event)
+  let context = null
+  let result = null
+  let errorMessage = ""
 
-  return { ok: false, message: "unknown_action" }
+  try {
+    if (!OPENID) {
+      result = { ok: false, message: "openid_missing" }
+      return result
+    }
+
+    if (action === "getContext") {
+      const data = await ensureShopContext(OPENID)
+      context = data
+      result = { ok: true, data }
+      return result
+    }
+
+    context = await ensureShopContext(OPENID)
+    if (action === "updateProfile") result = await updateProfile(OPENID, event?.profile || {})
+    else if (action === "listStaff") result = await listStaff(OPENID)
+    else if (action === "updateStaffRole") result = await updateStaffRole(OPENID, event)
+    else if (action === "removeStaff") result = await removeStaff(OPENID, event)
+    else if (action === "refreshInviteCode") result = await refreshInviteCode(OPENID)
+    else if (action === "getMonitorLogs") result = await getMonitorLogs(context)
+    else if (action === "joinByInviteCode") result = await joinByInviteCode(OPENID, event)
+    else result = { ok: false, message: "unknown_action" }
+
+    return result
+  } catch (error) {
+    errorMessage = summarizeError(error)
+    console.error(`${FUNCTION_NAME} failed`, error)
+    result = { ok: false, message: "internal_error" }
+    return result
+  } finally {
+    await writeFunctionLog({
+      functionName: FUNCTION_NAME,
+      action,
+      openId: OPENID || "",
+      shopId: context?.shopId || result?.data?.shopId || "",
+      role: context?.role || result?.data?.role || "",
+      durationMs: Date.now() - startedAt,
+      ...pickActionResult(result),
+      errorMessage
+    })
+  }
 }

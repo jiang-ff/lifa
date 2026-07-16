@@ -34,6 +34,7 @@ Page({
   data: {
     id: "",
     loading: true,
+    shop: null,
     actionLoading: false,
     visitLoading: false,
     member: {},
@@ -58,6 +59,12 @@ Page({
     }
     if (typeof this.getTabBar === "function" && this.getTabBar()) {
       this.getTabBar().hide()
+    }
+    try {
+      const shop = await getApp().ensureShopContext()
+      this.setData({ shop })
+    } catch (err) {
+      wx.showToast({ title: "加载店铺失败", icon: "none" })
     }
     this.setData({ id })
     await this.refreshAll()
@@ -129,6 +136,7 @@ Page({
   },
 
   goEdit() {
+    if (!this.data.shop?.canWriteMember) return
     wx.navigateTo({ url: `/pages/members/edit/edit?id=${this.data.id}` })
   },
 
@@ -151,7 +159,7 @@ Page({
   },
 
   async onVisitRecord() {
-    if (this.data.visitLoading) return
+    if (!this.data.shop?.canRecordVisit || this.data.visitLoading) return
     this.setData({ visitLoading: true })
     try {
       const res = await wx.cloud.callFunction({
@@ -188,6 +196,7 @@ Page({
   },
 
   async adjustBalance(type) {
+    if (!this.data.shop?.canWriteBalance) return
     if (this.data.actionLoading) return
 
     const title = type === "recharge" ? "充值金额" : type === "consume" ? "消费金额" : "余额调整（可正可负）"

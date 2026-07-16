@@ -1,38 +1,218 @@
 .shop-card {
-  background: linear-gradient(135deg, var(--color-primary-bg), rgba(99, 102, 241, 0.03));
-  border: 1rpx solid rgba(79, 70, 229, 0.08);
+  padding: 32rpx 28rpx 26rpx;
+}
+
+.hero-head {
+  position: relative;
+  z-index: 1;
+  align-items: flex-start;
+}
+
+.hero-main {
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.hero-line {
+  margin-top: 8rpx;
+}
+
+.hero-badge {
+  display: inline-flex;
+  margin-top: 18rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.hero-action {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 14rpx 20rpx;
+  font-weight: 800;
+  font-size: 24rpx;
 }
 
 .stats-row {
+  position: relative;
+  z-index: 1;
   gap: 12rpx;
+  margin-top: 28rpx;
+  align-items: stretch;
 }
 
 .metric {
   flex: 1;
-  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-md);
-  padding: 18rpx 16rpx;
-  border: 1rpx solid rgba(226, 232, 240, 0.5);
+  padding: 18rpx 14rpx;
+}
+
+.hero-metric {
+  background: rgba(255, 255, 255, 0.13);
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
 }
 
 .metric-label {
-  font-size: 22rpx;
-  color: var(--color-text-muted);
-  font-weight: 500;
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 600;
 }
 
 .metric-value {
   margin-top: 8rpx;
   font-size: 30rpx;
-  font-weight: 800;
-  color: var(--color-text);
+  line-height: 1.1;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.toolbar-card {
+  padding-bottom: 22rpx;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
 }
 
 .member-card {
-  cursor: pointer;
+  padding: 22rpx;
+  margin-bottom: 0;
 }
 
 .member-card:active {
-  opacity: 0.96;
-  transform: scale(0.995);
+  opacity: 0.94;
+  transform: scale(0.99);
+}
+
+.member-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.member-avatar-wrap {
+  position: relative;
+  margin-right: 18rpx;
+  flex-shrink: 0;
+}
+
+.remind-dot {
+  position: absolute;
+  top: -3rpx;
+  right: -3rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: var(--color-warning);
+  border: 3rpx solid var(--color-card);
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-title-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.member-card-name {
+  font-size: 30rpx;
+  font-weight: 900;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remind-chip {
+  margin-left: 10rpx;
+  flex-shrink: 0;
+  padding: 6rpx 12rpx;
+  font-size: 20rpx;
+}
+
+.member-card-phone {
+  margin-top: 4rpx;
+  font-size: 23rpx;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.meta-dot {
+  padding: 0 8rpx;
+  color: var(--color-text-muted);
+}
+
+.member-money {
+  margin-left: 16rpx;
+  font-size: 30rpx;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.balance-positive-text {
+  color: var(--color-success);
+}
+
+.balance-zero-text {
+  color: var(--color-text-muted);
+}
+
+.member-card-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10rpx;
+  margin-top: 18rpx;
+}
+
+.member-card-actions .chip {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 22rpx;
+  padding: 10rpx 0;
+}
+
+.empty-icon {
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 auto 16rpx;
+  border-radius: 50%;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  font-weight: 500;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.empty-text {
+  margin: 10rpx 0 22rpx;
 }

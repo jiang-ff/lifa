@@ -8,6 +8,7 @@ function toNumber(value) {
 Page({
   data: {
     loading: true,
+    noPermission: false,
     period: "month",
     dateLabel: "",
     summary: { totalRecharge: 0, totalConsume: 0, totalNet: 0, newMembers: 0, totalMembers: 0, totalVisits: 0 },
@@ -30,6 +31,18 @@ Page({
   async loadStats() {
     this.setData({ loading: true })
     try {
+      const shop = await app.ensureShopContext()
+      if (!shop?.canViewReport) {
+        this.setData({
+          noPermission: true,
+          loading: false,
+          daily: [],
+          topMembers: [],
+          summary: { totalRecharge: 0, totalConsume: 0, totalNet: 0, newMembers: 0, totalMembers: 0, totalVisits: 0 }
+        })
+        return
+      }
+
       const res = await wx.cloud.callFunction({
         name: "reportService",
         data: {
@@ -47,6 +60,7 @@ Page({
       const end = new Date(data.end)
 
       this.setData({
+        noPermission: false,
         summary: {
           totalRecharge: data.summary?.totalRecharge || 0,
           totalConsume: data.summary?.totalConsume || 0,
@@ -60,6 +74,7 @@ Page({
         dateLabel: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")} ~ ${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`
       })
     } catch (err) {
+      this.setData({ noPermission: false })
       wx.showToast({ title: "加载报表失败", icon: "none" })
     } finally {
       this.setData({ loading: false })

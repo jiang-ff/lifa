@@ -4,44 +4,141 @@
   </block>
 
   <block wx:else>
-    <view class="card">
-      <view class="field">
-        <view class="label">店铺名称</view>
-        <input class="input" value="{{form.name}}" placeholder="例如：阿杰造型" bindinput="onInput" data-field="name" />
+    <view class="card card-soft env-card">
+      <view class="row">
+        <view>
+          <view class="section-title">运行环境</view>
+          <view class="section-caption">开发版和体验版可切换，正式版固定走生产环境。</view>
+        </view>
+        <view class="chip {{runtimeEnv.stageClass}}">{{runtimeEnv.stageText}}</view>
       </view>
 
-      <view class="field">
-        <view class="label">联系人</view>
-        <input class="input" value="{{form.contactName}}" placeholder="例如：店主姓名" bindinput="onInput" data-field="contactName" />
+      <view class="env-meta">
+        <view class="env-meta-item">
+          <view class="label">当前环境</view>
+          <view class="env-value">{{runtimeEnv.profileLabel}}</view>
+        </view>
+        <view class="env-meta-item">
+          <view class="label">Cloud Env ID</view>
+          <view class="env-value env-id">{{runtimeEnv.cloudEnvId}}</view>
+        </view>
       </view>
 
-      <view class="field">
-        <view class="label">联系电话</view>
-        <input class="input" value="{{form.phone}}" placeholder="用于会员联系和门店识别" type="number" bindinput="onInput" data-field="phone" />
-      </view>
+      <view class="section-caption">{{runtimeEnv.description}}</view>
 
-      <view class="field">
-        <view class="label">店铺地址</view>
-        <input class="input" value="{{form.address}}" placeholder="例如：XX 路 88 号" bindinput="onInput" data-field="address" />
-      </view>
+      <block wx:if="{{runtimeEnv.canSwitch}}">
+        <view class="env-actions">
+          <button
+            wx:for="{{runtimeEnv.profiles}}"
+            wx:key="key"
+            class="{{item.key === runtimeEnv.profile ? 'btn env-btn-active' : 'btn-ghost env-btn'}}"
+            bindtap="onSwitchEnv"
+            data-profile="{{item.key}}"
+          >
+            {{item.label}}
+          </button>
+        </view>
 
-      <view class="field">
-        <view class="label">经营备注</view>
-        <textarea class="input" value="{{form.note}}" placeholder="例如：主打洗剪吹、染烫、儿童剪发" auto-height bindinput="onInput" data-field="note" />
-      </view>
+        <button
+          wx:if="{{runtimeEnv.hasManualOverride}}"
+          class="btn-secondary env-reset"
+          bindtap="onResetEnv"
+        >
+          恢复默认环境
+        </button>
+      </block>
     </view>
 
-    <view style="height: 20rpx;"></view>
+    <block wx:if="{{noPermission}}">
+      <view class="card empty-state">
+        <view class="section-title">暂无修改权限</view>
+        <view class="section-caption">当前账号不能修改店铺资料，如需调整请使用店长账号。</view>
+      </view>
+    </block>
 
-    <view class="card-soft">
-      <view style="font-weight: 800;">这页解决什么问题</view>
-      <view class="muted" style="margin-top: 8rpx;">
-        现在每个微信登录用户会默认绑定自己的店铺，会员、余额、流水都会自动归属到该店铺，避免多家理发店共用一个通用会员库。
+    <block wx:else>
+      <view class="card card-highlight settings-head">
+        <view class="section-title">店铺资料</view>
+        <view class="section-caption">完善门店名称、联系人和经营备注，方便团队成员识别当前门店。</view>
+      </view>
+
+      <view class="card">
+        <view class="field">
+          <view class="label">店铺名称</view>
+          <input class="input" value="{{form.name}}" placeholder="例如：阿杰造型" bindinput="onInput" data-field="name" />
+        </view>
+
+        <view class="field">
+          <view class="label">联系人</view>
+          <input class="input" value="{{form.contactName}}" placeholder="例如：店主姓名" bindinput="onInput" data-field="contactName" />
+        </view>
+
+        <view class="field">
+          <view class="label">联系电话</view>
+          <input class="input" value="{{form.phone}}" placeholder="用于会员联系和门店识别" type="number" bindinput="onInput" data-field="phone" />
+        </view>
+
+        <view class="field">
+          <view class="label">店铺地址</view>
+          <input class="input" value="{{form.address}}" placeholder="例如：XX 路 88 号" bindinput="onInput" data-field="address" />
+        </view>
+
+        <view class="field">
+          <view class="label">经营备注</view>
+          <textarea class="input" value="{{form.note}}" placeholder="例如：主打洗剪吹、染烫、儿童剪发" auto-height bindinput="onInput" data-field="note" />
+        </view>
+      </view>
+
+      <view class="card-soft settings-tip">
+        <view class="section-title">数据归属</view>
+        <view class="muted" style="margin-top: 8rpx;">
+          每个微信登录用户都会绑定到自己的店铺。会员、余额、到店和报表都会自动归属到当前门店，避免多家店共用同一套会员数据。
+        </view>
+      </view>
+
+      <button class="btn" loading="{{saving}}" bindtap="onSave">保存店铺信息</button>
+    </block>
+
+    <view wx:if="{{canManageStaff}}" class="card monitor-card">
+      <view class="row">
+        <view>
+          <view class="section-title">运营与调用日志</view>
+          <view class="section-caption">这里可快速确认最近的关键写操作和云函数调用情况。</view>
+        </view>
+        <button class="btn-secondary monitor-refresh" loading="{{logsLoading}}" bindtap="loadMonitorLogs">刷新</button>
+      </view>
+
+      <view class="monitor-section">
+        <view class="label">最近业务操作</view>
+        <block wx:if="{{operationAudits.length}}">
+          <view wx:for="{{operationAudits}}" wx:key="createdAt" class="log-item">
+            <view class="row gap-12">
+              <view class="log-title">{{item.actionText}}</view>
+              <view class="chip chip-gray">{{item.roleText}}</view>
+            </view>
+            <view class="log-sub">{{item.timeText}}</view>
+            <view wx:if="{{item.detailText}}" class="log-detail">{{item.detailText}}</view>
+          </view>
+        </block>
+        <view wx:else class="muted monitor-empty">暂无业务审计记录</view>
+      </view>
+
+      <view class="divider"></view>
+
+      <view class="monitor-section">
+        <view class="label">最近云函数调用</view>
+        <block wx:if="{{functionLogs.length}}">
+          <view wx:for="{{functionLogs}}" wx:key="createdAt" class="log-item">
+            <view class="row gap-12">
+              <view class="log-title">{{item.functionLabel}} / {{item.actionText}}</view>
+              <view class="chip {{item.statusClass}}">{{item.statusText}}</view>
+            </view>
+            <view class="log-sub">{{item.timeText}} · {{item.durationText}} · {{item.roleText}}</view>
+            <view class="log-detail">{{item.messageText}}</view>
+          </view>
+        </block>
+        <view wx:else class="muted monitor-empty">暂无云函数调用记录</view>
       </view>
     </view>
-
-    <view style="height: 24rpx;"></view>
-
-    <button class="btn" loading="{{saving}}" bindtap="onSave">保存店铺信息</button>
   </block>
 </view>

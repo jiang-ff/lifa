@@ -1,15 +1,137 @@
-.hero {
-  background: linear-gradient(
-    135deg,
-    rgba(79, 70, 229, 0.06),
-    rgba(99, 102, 241, 0.03)
-  );
-  border: 1rpx solid rgba(79, 70, 229, 0.08);
+.detail-hero {
+  padding: 30rpx 26rpx 24rpx;
+}
+
+.detail-head {
+  position: relative;
+  z-index: 1;
+  align-items: flex-start;
+}
+
+.member-profile {
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-info {
+  margin-left: 18rpx;
+  min-width: 0;
+}
+
+.detail-name {
+  font-size: 40rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-phone {
+  margin-top: 8rpx;
+}
+
+.profile-tags {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 14rpx;
+  flex-wrap: wrap;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.balance-box {
+  margin-left: 16rpx;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.balance-value {
+  margin-top: 4rpx;
+  font-size: 44rpx;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.hero-note {
+  position: relative;
+  z-index: 1;
+  margin-top: 18rpx;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 24rpx;
+}
+
+.quick-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10rpx;
+  margin-top: 22rpx;
+}
+
+.quick-action {
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.primary-action {
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.summary-grid .stat-tile {
+  padding: 18rpx 14rpx;
+}
+
+.summary-grid .stat-value {
+  font-size: 30rpx;
+}
+
+.income {
+  color: var(--color-success);
+}
+
+.expense {
+  color: var(--color-danger);
+}
+
+.visit-info {
+  flex: 1;
+  padding-right: 16rpx;
+}
+
+.visit-alert {
+  margin-top: 10rpx;
 }
 
 .tx {
-  padding: 16rpx 0;
-  border-top: 1rpx solid var(--color-border);
+  padding: 18rpx 0;
+  border-top: 1rpx solid var(--color-border-light);
 }
 
 .tx:first-child {

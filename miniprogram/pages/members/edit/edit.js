@@ -9,6 +9,8 @@ Page({
   data: {
     id: "",
     isEdit: false,
+    shop: null,
+    noPermission: false,
     saving: false,
     currentBalance: 0,
     shopName: "",
@@ -31,11 +33,16 @@ Page({
     }
     try {
       const shop = await app.ensureShopContext()
-      this.setData({ shopName: shop.shopName || "" })
+      this.setData({
+        shop,
+        shopName: shop.shopName || "",
+        noPermission: !shop?.canWriteMember
+      })
     } catch (err) {
       wx.showToast({ title: "加载店铺失败", icon: "none" })
     }
 
+    if (this.data.noPermission) return
     if (!id) return
 
     wx.setNavigationBarTitle({ title: "编辑会员" })
@@ -97,6 +104,7 @@ Page({
 
   async onSave() {
     if (this.data.saving) return
+    if (this.data.noPermission) return
 
     const form = this.data.form
     const name = (form.name || "").trim()
@@ -132,6 +140,8 @@ Page({
         const msg =
           result?.message === "phone_exists"
             ? "该手机号已存在"
+            : result?.message === "forbidden"
+              ? "当前角色不能执行此操作"
             : result?.message === "not_found"
               ? "会员不存在"
               : "保存失败"
@@ -155,6 +165,7 @@ Page({
 
   async onDelete() {
     if (!this.data.isEdit) return
+    if (!this.data.shop?.canDeleteMember) return
 
     const res = await wx.showModal({
       title: "删除会员",

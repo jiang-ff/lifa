@@ -1,3 +1,10 @@
+const {
+  listEnvProfiles,
+  resolveRuntimeEnv,
+  persistRuntimeEnvProfile,
+  clearRuntimeEnvProfile
+} = require("./config/env")
+
 App({
   onLaunch() {
     if (!wx.cloud) {
@@ -5,14 +12,53 @@ App({
       return
     }
 
-    wx.cloud.init({
-      env: "cloud1-d6gmq1pam45528b5f",
-      traceUser: true
-    })
+    this.initializeCloud()
   },
 
   globalData: {
-    shopContext: null
+    shopContext: null,
+    runtimeEnv: null,
+    runtimeProfiles: []
+  },
+
+  initializeCloud(options = {}) {
+    const runtimeEnv = resolveRuntimeEnv({ profile: options.profile })
+
+    wx.cloud.init({
+      env: runtimeEnv.cloudEnvId,
+      traceUser: true
+    })
+
+    this.globalData.runtimeEnv = runtimeEnv
+    this.globalData.runtimeProfiles = listEnvProfiles()
+    this.globalData.shopContext = null
+    return runtimeEnv
+  },
+
+  getRuntimeEnv() {
+    return this.globalData.runtimeEnv || this.initializeCloud()
+  },
+
+  getRuntimeProfiles() {
+    if (!this.globalData.runtimeProfiles || this.globalData.runtimeProfiles.length === 0) {
+      this.globalData.runtimeProfiles = listEnvProfiles()
+    }
+    return this.globalData.runtimeProfiles
+  },
+
+  async switchRuntimeEnvProfile(profile) {
+    const runtimeEnv = this.getRuntimeEnv()
+    if (runtimeEnv.isRelease) {
+      throw new Error("release_env_locked")
+    }
+
+    persistRuntimeEnvProfile(profile)
+    return this.initializeCloud({ profile })
+  },
+
+  async resetRuntimeEnvProfile() {
+    clearRuntimeEnvProfile()
+    return this.initializeCloud()
   },
 
   async ensureShopContext(options = {}) {
